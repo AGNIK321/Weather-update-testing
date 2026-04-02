@@ -548,7 +548,7 @@ if comp:
     g_wcode = cur.get('weather_code', 0)
     g_label, g_icon = wmo_to_label(g_wcode)
 
-    h_times  = pd.to_datetime(hrly['time'])
+    h_times  = pd.to_datetime(hrly['time']).tz_localize(None)
     ci       = int((h_times - now_ist()).abs().argmin())
     g_prob   = hrly.get('precipitation_probability', [0]*len(h_times))[ci]
     g_rayn   = "YES" if g_rain > 0.1 else "NO"
@@ -614,7 +614,7 @@ if comp:
     </div>
     """, unsafe_allow_html=True)
 
-    future_ts = [pd.Timestamp(t) for t in forecast_df['time_ist']]
+    future_ts = [pd.Timestamp(t).tz_localize(None) if pd.Timestamp(t).tzinfo else pd.Timestamp(t) for t in forecast_df['time_ist']]
     om_probs  = []
     for ft in future_ts:
         idx = int((h_times - ft).abs().argmin())
@@ -650,7 +650,7 @@ if comp:
     </div>
     """, unsafe_allow_html=True)
 
-    dates = pd.to_datetime(daily['time'])
+    dates = pd.to_datetime(daily['time']).tz_localize(None)
     week  = '<div style="padding:0 3rem 2rem;"><div class="week-grid">'
     for i in range(min(7, len(dates))):
         d      = dates[i]
