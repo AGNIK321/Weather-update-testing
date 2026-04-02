@@ -695,7 +695,10 @@ if comp:
     g_label, g_icon = wmo_to_label(g_wcode)
 
     h_times_raw = pd.to_datetime(hrly['time'])
-    h_times = h_times_raw.dt.tz_convert(None) if h_times_raw.dt.tz is not None else h_times_raw
+    if isinstance(h_times_raw, pd.DatetimeIndex):
+        h_times = h_times_raw.tz_convert(None) if h_times_raw.tz is not None else h_times_raw
+    else:
+        h_times = h_times_raw.dt.tz_convert(None) if h_times_raw.dt.tz is not None else h_times_raw
     now_scalar = pd.Timestamp(now_ist())
     ci      = int((h_times - now_scalar).abs().argmin())
     g_prob  = hrly.get('precipitation_probability', [0]*len(h_times))[ci]
@@ -799,7 +802,10 @@ if comp:
     """, unsafe_allow_html=True)
 
     dates_raw = pd.to_datetime(daily['time'])
-    dates = dates_raw.tz_convert(None) if dates_raw.dt.tz is not None else dates_raw
+    if isinstance(dates_raw, pd.DatetimeIndex):
+        dates = dates_raw.tz_convert(None) if dates_raw.tz is not None else dates_raw
+    else:
+        dates = dates_raw.dt.tz_convert(None) if dates_raw.dt.tz is not None else dates_raw
     week  = '<div style="padding:0 3rem 2rem;"><div class="week-grid">'
     for i in range(min(7, len(dates))):
         d      = dates[i]
