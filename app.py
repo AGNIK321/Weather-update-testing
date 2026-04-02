@@ -696,11 +696,13 @@ if comp:
 
     h_times_raw = pd.to_datetime(hrly['time'])
     if isinstance(h_times_raw, pd.DatetimeIndex):
-        h_times = h_times_raw.tz_convert(None) if h_times_raw.tz is not None else h_times_raw
+        h_times_naive = h_times_raw.tz_convert(None) if h_times_raw.tz is not None else h_times_raw
     else:
-        h_times = h_times_raw.dt.tz_convert(None) if h_times_raw.dt.tz is not None else h_times_raw
+        h_times_naive = h_times_raw.dt.tz_convert(None) if h_times_raw.dt.tz is not None else h_times_raw
+    # Always work with a tz-naive Series for safe arithmetic
+    h_times = pd.Series(pd.to_datetime(h_times_naive).values)
     now_scalar = pd.Timestamp(now_ist())
-    ci      = int((h_times - now_scalar).abs().argmin())
+    ci      = int(np.argmin(np.abs((h_times - now_scalar).values)))
     g_prob  = hrly.get('precipitation_probability', [0]*len(h_times))[ci]
     g_rayn  = "YES" if g_rain > 0.1 else "NO"
     ml_rayn = "YES" if flag else "NO"
@@ -767,7 +769,7 @@ if comp:
     future_ts = [pd.Timestamp(t).replace(tzinfo=None) for t in forecast_df['time_ist']]
     om_probs  = []
     for ft in future_ts:
-        idx = int((h_times - pd.Timestamp(ft).replace(tzinfo=None)).abs().argmin())
+        idx = int(np.argmin(np.abs((h_times - pd.Timestamp(ft).replace(tzinfo=None)).values)))
         om_probs.append(hrly.get('precipitation_probability', [0]*len(h_times))[idx])
 
     time_label_color = T['text_faint']
