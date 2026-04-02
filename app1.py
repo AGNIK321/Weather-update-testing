@@ -888,7 +888,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 _sensor_df  = fetch_sensor_data()
-_now        = pd.Timestamp.now()
+_now        = now_ist()  # use IST to match sheet timestamps
 # Sensor is considered CONNECTED only if a row arrived within the last 2 minutes.
 # Beyond that the ESP8266 is powered off / disconnected from WiFi.
 _TIMEOUT_S  = 60
@@ -1006,7 +1006,7 @@ font-size:0.58rem; color:{T['meta_tx']};">
 </div>""", unsafe_allow_html=True)
 
 # Auto-refresh every 30 seconds
-st.markdown("""<meta http-equiv="refresh" content="30">""", unsafe_allow_html=True)
+st.markdown("""<meta http-equiv="refresh" content="15">""", unsafe_allow_html=True)
 
 # ─── Footer ───────────────────────────────────────────────────────────────────
 rain_slots = int(forecast_df['rain_flag'].sum())
