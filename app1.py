@@ -1006,7 +1006,7 @@ font-size:0.58rem; color:{T['meta_tx']};">
 </div>""", unsafe_allow_html=True)
 
 # Auto-refresh every 30 seconds
-st.markdown("""<meta http-equiv="refresh" content="15">""", unsafe_allow_html=True)
+st.markdown("""<meta http-equiv="refresh" content="120">""", unsafe_allow_html=True)
 
 # ─── Footer ───────────────────────────────────────────────────────────────────
 rain_slots = int(forecast_df['rain_flag'].sum())
