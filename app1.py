@@ -891,7 +891,7 @@ _sensor_df  = fetch_sensor_data()
 _now        = pd.Timestamp.now()
 # Sensor is considered CONNECTED only if a row arrived within the last 2 minutes.
 # Beyond that the ESP8266 is powered off / disconnected from WiFi.
-_TIMEOUT_S  = 120
+_TIMEOUT_S  = 60
 
 if not _sensor_df.empty:
     _latest = _sensor_df.iloc[-1]
