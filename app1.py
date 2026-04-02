@@ -11,10 +11,6 @@ import numpy as np
 import joblib
 import plotly.graph_objects as go
 from datetime import timezone, timedelta
-import threading
-import json
-import time
-from flask import Flask, request as flask_request, jsonify
 
 st.set_page_config(
     page_title="Kolkata Rain Intelligence",
@@ -309,36 +305,25 @@ div[data-testid="stHorizontalBlock"] {{ gap:0 !important; }}
 </style>
 """, unsafe_allow_html=True)
 
-# ─── Flask Receiver (background thread) ──────────────────────────────────────
-SENSOR_FILE = "sensor_latest.json"
-_flask_app  = Flask(__name__)
+# ─── Google Sheets Sensor Reader ─────────────────────────────────────────────
+SHEET_ID  = "1UpnXi_F-GyX7HCaJkV0RO3vSa4EZEiLvlrnVkXi6GFY"
+SHEET_CSV = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&sheet=Sheet1"
 
-@_flask_app.route("/sensor", methods=["POST"])
-def _receive_sensor():
+@st.cache_data(ttl=10)   # re-fetch every 10 seconds
+def fetch_sensor_data():
+    """Fetch the Google Sheet as CSV and return the latest row + history."""
     try:
-        d = flask_request.get_json(force=True)
-        with open(SENSOR_FILE, "w") as f:
-            json.dump({"temp": d.get("temp"), "hum": d.get("hum"), "ts": time.time()}, f)
-        return jsonify({"status": "ok"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "msg": str(e)}), 400
-
-def _run_flask():
-    _flask_app.run(host="0.0.0.0", port=5050, debug=False, use_reloader=False)
-
-if "flask_started" not in st.session_state:
-    threading.Thread(target=_run_flask, daemon=True).start()
-    st.session_state.flask_started = True
-
-def read_sensor():
-    """Read latest sensor values from the shared JSON file."""
-    try:
-        if os.path.exists(SENSOR_FILE):
-            with open(SENSOR_FILE) as f:
-                return json.load(f)
+        df = pd.read_csv(SHEET_CSV)
+        df.columns = [c.strip() for c in df.columns]
+        # Expect columns: Timestamp, Temperature(C), Humidity(%)
+        df = df.dropna(subset=[df.columns[1], df.columns[2]])
+        df['Timestamp']      = pd.to_datetime(df[df.columns[0]], dayfirst=True, errors='coerce')
+        df['Temperature(C)'] = pd.to_numeric(df[df.columns[1]], errors='coerce')
+        df['Humidity(%)']    = pd.to_numeric(df[df.columns[2]], errors='coerce')
+        df = df.dropna().sort_values('Timestamp').reset_index(drop=True)
+        return df
     except Exception:
-        pass
-    return {"temp": None, "hum": None, "ts": None}
+        return pd.DataFrame()
 
 # ─── Constants ────────────────────────────────────────────────────────────────
 IST = timezone(timedelta(hours=5, minutes=30))
@@ -902,27 +887,67 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-_sd = read_sensor()
-_s_temp = _sd.get("temp")
-_s_hum  = _sd.get("hum")
-_s_ts   = _sd.get("ts")
+_sensor_df = fetch_sensor_data()
 
-if _s_ts is not None:
-    _age_s  = int(time.time() - _s_ts)
-    _online = _age_s < 30          # consider offline if no data for >30s
-    _age_str = f"{_age_s}s ago" if _age_s < 60 else f"{_age_s // 60}m {_age_s % 60}s ago"
-    _dot_cls = "sensor-dot" if _online else "sensor-dot offline"
-    _status  = "LIVE" if _online else "STALE"
+if not _sensor_df.empty:
+    _latest   = _sensor_df.iloc[-1]
+    _s_temp   = _latest["Temperature(C)"]
+    _s_hum    = _latest["Humidity(%)"]
+    _s_ts     = _latest["Timestamp"]
+    _now      = pd.Timestamp.now()
+    _age_s    = int((_now - _s_ts).total_seconds())
+    _online   = _age_s < 90          # stale if no new row for >90s (ESP posts every 60s)
+    _age_str  = f"{_age_s}s ago" if _age_s < 60 else f"{_age_s // 60}m {_age_s % 60}s ago"
+    _dot_cls  = "sensor-dot" if _online else "sensor-dot offline"
+    _status   = "LIVE" if _online else "STALE"
+    _temp_display = f"{_s_temp:.1f}"
+    _hum_display  = f"{_s_hum:.1f}"
+
+    # Mini history chart (last 20 readings)
+    _hist = _sensor_df.tail(20)
+    _fig_s = go.Figure()
+    _fig_s.add_trace(go.Scatter(
+        x=_hist["Timestamp"], y=_hist["Temperature(C)"],
+        name="Temp °C", mode="lines+markers",
+        line=dict(color=T["accent"], width=2),
+        marker=dict(size=5),
+        hovertemplate="%{x|%H:%M:%S}<br>%{y:.1f}°C<extra></extra>"
+    ))
+    _fig_s.add_trace(go.Scatter(
+        x=_hist["Timestamp"], y=_hist["Humidity(%)"],
+        name="Humidity %", mode="lines+markers", yaxis="y2",
+        line=dict(color=T["press_line"], width=2, dash="dot"),
+        marker=dict(size=5),
+        hovertemplate="%{x|%H:%M:%S}<br>%{y:.1f}%<extra></extra>"
+    ))
+    _fig_s.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=180,
+        margin=dict(l=10,r=50,t=10,b=10), showlegend=True,
+        legend=dict(font=dict(color=T["text_faint"], size=9, family="Space Mono"),
+                    bgcolor="rgba(0,0,0,0)", orientation="h", y=1.15),
+        yaxis=dict(title="°C", gridcolor=T["grid_color"], zeroline=False,
+                   tickfont=dict(color=T["tick_color"], size=9, family="Space Mono"),
+                   title_font=dict(color=T["tick_color"], size=9)),
+        yaxis2=dict(title="%", overlaying="y", side="right", showgrid=False,
+                    tickfont=dict(color=T["tick_color"], size=9, family="Space Mono"),
+                    title_font=dict(color=T["tick_color"], size=9)),
+        xaxis=dict(gridcolor=T["grid_color"], tickangle=-30,
+                   tickfont=dict(color=T["tick_color"], size=8, family="Space Mono")),
+        hoverlabel=dict(bgcolor=T["hoverlabel_bg"], font=dict(color=T["text_secondary"]))
+    )
 else:
+    _s_temp = _s_hum = None
     _age_str = "No data yet"
     _dot_cls = "sensor-dot offline"
     _status  = "WAITING"
+    _temp_display = _hum_display = "—"
+    _fig_s = None
 
 _temp_display = f"{_s_temp:.1f}" if _s_temp is not None else "—"
 _hum_display  = f"{_s_hum:.1f}"  if _s_hum  is not None else "—"
 
 st.markdown(f"""
-<div style="padding:0 3rem 2rem;">
+<div style="padding:0 3rem 1rem;">
   <div class="sensor-grid">
     <div class="sensor-card">
       <span class="sensor-icon">&#x1F321;&#xFE0F;</span>
@@ -939,14 +964,23 @@ st.markdown(f"""
       <div class="sensor-age">{_age_str}</div>
     </div>
   </div>
-  <p style="font-family:'Space Mono',monospace;font-size:0.58rem;color:{T['meta_tx']};margin-top:1rem;text-align:center;">
-    ESP8266 &rarr; POST http://&lt;your-pc-ip&gt;:5050/sensor &middot; Updates every 6s
-  </p>
 </div>
 """, unsafe_allow_html=True)
 
-# Auto-refresh every 5 seconds so sensor values update without manual reload
-st.markdown("""<meta http-equiv="refresh" content="5">""", unsafe_allow_html=True)
+if _fig_s is not None:
+    st.markdown(f"""<div style="padding:0 3rem 0.5rem;"><div class="sec-header">
+      <span class="sec-title">Sensor History &middot; Last 20 Readings</span>
+      <span class="sec-line"></span></div></div>""", unsafe_allow_html=True)
+    st.plotly_chart(_fig_s, use_container_width=True, config={"displayModeBar": False})
+
+st.markdown(f"""
+<div style="padding:0 3rem 2rem;text-align:center;font-family:'Space Mono',monospace;
+font-size:0.58rem;color:{T['meta_tx']};">
+  ESP8266 &#x2192; Google Sheets &#x2192; Streamlit &middot; Auto-refreshes every 30s
+</div>""", unsafe_allow_html=True)
+
+# Auto-refresh every 30 seconds (sheet updates every ~60s from ESP)
+st.markdown("""<meta http-equiv="refresh" content="30">""", unsafe_allow_html=True)
 
 # ─── Footer ───────────────────────────────────────────────────────────────────
 rain_slots = int(forecast_df['rain_flag'].sum())
