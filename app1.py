@@ -10,9 +10,7 @@ import pandas as pd
 import numpy as np
 import joblib
 import plotly.graph_objects as go
-import plotly.express as px
 from datetime import datetime, timezone, timedelta
-import time
 
 # ─── Page Config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -326,7 +324,10 @@ div[data-testid="stHorizontalBlock"] { gap: 0 !important; }
 """
 
 DARK_CSS = """
-html, body, [data-testid="stAppViewContainer"] { background: #050c1a !important; color: #e8f4ff; }
+/* Aggressively target Streamlit's root wrapper */
+.stApp, [data-testid="stAppViewContainer"] { background-color: #050c1a !important; color: #e8f4ff !important; }
+html, body { background-color: #050c1a !important; color: #e8f4ff !important; }
+
 div[data-testid="stRadio"] { background: rgba(56,182,255,0.05); border: 1px solid rgba(56,182,255,0.2); color: #e8f4ff; }
 .hero { background: linear-gradient(135deg, #050c1a 0%, #0a1f3a 40%, #0d2b52 70%, #091d3a 100%); border-bottom: 1px solid rgba(56, 182, 255, 0.15); }
 .city-block h1 { color: #ffffff; }
@@ -360,7 +361,10 @@ div[data-testid="stMetric"] { background: rgba(255,255,255,0.02); border: 1px so
 """
 
 LIGHT_CSS = """
-html, body, [data-testid="stAppViewContainer"] { background: #f0f4f8 !important; color: #0f172a; }
+/* Aggressively target Streamlit's root wrapper */
+.stApp, [data-testid="stAppViewContainer"] { background-color: #f0f4f8 !important; color: #0f172a !important; }
+html, body { background-color: #f0f4f8 !important; color: #0f172a !important; }
+
 div[data-testid="stRadio"] { background: rgba(0,102,204,0.05); border: 1px solid rgba(0,102,204,0.2); color: #0f172a; }
 .hero { background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 40%, #7dd3fc 70%, #38bdf8 100%); border-bottom: 1px solid rgba(0, 102, 204, 0.15); }
 .city-block h1 { color: #0f172a; }
