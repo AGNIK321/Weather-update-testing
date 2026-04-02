@@ -887,41 +887,67 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-_sensor_df = fetch_sensor_data()
+_sensor_df  = fetch_sensor_data()
+_now        = pd.Timestamp.now()
+# Sensor is considered CONNECTED only if a row arrived within the last 2 minutes.
+# Beyond that the ESP8266 is powered off / disconnected from WiFi.
+_TIMEOUT_S  = 120
 
 if not _sensor_df.empty:
-    _latest   = _sensor_df.iloc[-1]
-    _s_temp   = _latest["Temperature(C)"]
-    _s_hum    = _latest["Humidity(%)"]
-    _s_ts     = _latest["Timestamp"]
-    _now      = pd.Timestamp.now()
-    _age_s    = int((_now - _s_ts).total_seconds())
-    _online   = _age_s < 90          # stale if no new row for >90s (ESP posts every 60s)
-    _age_str  = f"{_age_s}s ago" if _age_s < 60 else f"{_age_s // 60}m {_age_s % 60}s ago"
-    _dot_cls  = "sensor-dot" if _online else "sensor-dot offline"
-    _status   = "LIVE" if _online else "STALE"
-    _temp_display = f"{_s_temp:.1f}"
-    _hum_display  = f"{_s_hum:.1f}"
+    _latest = _sensor_df.iloc[-1]
+    _s_temp = _latest["Temperature(C)"]
+    _s_hum  = _latest["Humidity(%)"]
+    _s_ts   = _latest["Timestamp"]
+    _age_s  = int((_now - _s_ts).total_seconds())
+    _connected = _age_s <= _TIMEOUT_S
+else:
+    _s_temp = _s_hum = None
+    _s_ts   = None
+    _age_s  = None
+    _connected = False
 
-    # Mini history chart (last 20 readings)
+if _connected:
+    # ── SENSOR ONLINE ─────────────────────────────────────────────────────────
+    _age_str = f"{_age_s}s ago" if _age_s < 60 else f"{_age_s // 60}m {_age_s % 60}s ago"
+
+    st.markdown(f"""
+    <div style="padding:0 3rem 1rem;">
+      <div class="sensor-grid">
+        <div class="sensor-card">
+          <span class="sensor-icon">&#x1F321;&#xFE0F;</span>
+          <div class="sensor-val">{_s_temp:.1f}<span class="sensor-unit">&deg;C</span></div>
+          <div class="sensor-lbl">Temperature</div>
+          <div class="sensor-status"><span class="sensor-dot"></span>LIVE</div>
+          <div class="sensor-age">Last update: {_age_str}</div>
+        </div>
+        <div class="sensor-card">
+          <span class="sensor-icon">&#x1F4A7;</span>
+          <div class="sensor-val">{_s_hum:.1f}<span class="sensor-unit">%</span></div>
+          <div class="sensor-lbl">Humidity</div>
+          <div class="sensor-status"><span class="sensor-dot"></span>LIVE</div>
+          <div class="sensor-age">Last update: {_age_str}</div>
+        </div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # History chart — last 20 readings
     _hist = _sensor_df.tail(20)
     _fig_s = go.Figure()
     _fig_s.add_trace(go.Scatter(
         x=_hist["Timestamp"], y=_hist["Temperature(C)"],
         name="Temp °C", mode="lines+markers",
-        line=dict(color=T["accent"], width=2),
-        marker=dict(size=5),
+        line=dict(color=T["accent"], width=2), marker=dict(size=5),
         hovertemplate="%{x|%H:%M:%S}<br>%{y:.1f}°C<extra></extra>"
     ))
     _fig_s.add_trace(go.Scatter(
         x=_hist["Timestamp"], y=_hist["Humidity(%)"],
         name="Humidity %", mode="lines+markers", yaxis="y2",
-        line=dict(color=T["press_line"], width=2, dash="dot"),
-        marker=dict(size=5),
+        line=dict(color=T["press_line"], width=2, dash="dot"), marker=dict(size=5),
         hovertemplate="%{x|%H:%M:%S}<br>%{y:.1f}%<extra></extra>"
     ))
     _fig_s.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=180,
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=200,
         margin=dict(l=10,r=50,t=10,b=10), showlegend=True,
         legend=dict(font=dict(color=T["text_faint"], size=9, family="Space Mono"),
                     bgcolor="rgba(0,0,0,0)", orientation="h", y=1.15),
@@ -935,51 +961,51 @@ if not _sensor_df.empty:
                    tickfont=dict(color=T["tick_color"], size=8, family="Space Mono")),
         hoverlabel=dict(bgcolor=T["hoverlabel_bg"], font=dict(color=T["text_secondary"]))
     )
-else:
-    _s_temp = _s_hum = None
-    _age_str = "No data yet"
-    _dot_cls = "sensor-dot offline"
-    _status  = "WAITING"
-    _temp_display = _hum_display = "—"
-    _fig_s = None
-
-_temp_display = f"{_s_temp:.1f}" if _s_temp is not None else "—"
-_hum_display  = f"{_s_hum:.1f}"  if _s_hum  is not None else "—"
-
-st.markdown(f"""
-<div style="padding:0 3rem 1rem;">
-  <div class="sensor-grid">
-    <div class="sensor-card">
-      <span class="sensor-icon">&#x1F321;&#xFE0F;</span>
-      <div class="sensor-val">{_temp_display}<span class="sensor-unit">&deg;C</span></div>
-      <div class="sensor-lbl">Temperature</div>
-      <div class="sensor-status"><span class="{_dot_cls}"></span>{_status}</div>
-      <div class="sensor-age">{_age_str}</div>
-    </div>
-    <div class="sensor-card">
-      <span class="sensor-icon">&#x1F4A7;</span>
-      <div class="sensor-val">{_hum_display}<span class="sensor-unit">%</span></div>
-      <div class="sensor-lbl">Humidity</div>
-      <div class="sensor-status"><span class="{_dot_cls}"></span>{_status}</div>
-      <div class="sensor-age">{_age_str}</div>
-    </div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-if _fig_s is not None:
-    st.markdown(f"""<div style="padding:0 3rem 0.5rem;"><div class="sec-header">
-      <span class="sec-title">Sensor History &middot; Last 20 Readings</span>
-      <span class="sec-line"></span></div></div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div style="padding:0 3rem 0.5rem;">
+      <div class="sec-header">
+        <span class="sec-title">Sensor History &middot; Last 20 Readings</span>
+        <span class="sec-line"></span>
+      </div></div>""", unsafe_allow_html=True)
     st.plotly_chart(_fig_s, use_container_width=True, config={"displayModeBar": False})
 
+else:
+    # ── SENSOR OFFLINE ────────────────────────────────────────────────────────
+    if _s_ts is not None:
+        _last_seen = _s_ts.strftime("%d %b %Y, %H:%M:%S")
+        _offline_msg = f"Last seen: {_last_seen}"
+    else:
+        _offline_msg = "No data has been received yet."
+
+    st.markdown(f"""
+    <div style="padding:0 3rem 2rem;">
+      <div style="
+        background: rgba(255,60,60,0.06);
+        border: 1px solid rgba(255,60,60,0.25);
+        border-left: 3px solid #ff4444;
+        border-radius: 16px;
+        padding: 2rem 2rem;
+        text-align: center;
+      ">
+        <div style="font-size:2.8rem; margin-bottom:0.8rem;">🔌</div>
+        <div style="font-family:'Sora',sans-serif; font-size:1.3rem; font-weight:700;
+             color:#ff6666; margin-bottom:0.4rem;">Sensor Not Connected</div>
+        <div style="font-family:'Space Mono',monospace; font-size:0.68rem;
+             color:{T['text_muted']}; letter-spacing:1px; margin-bottom:0.6rem;">
+          Power on your NodeMCU and ensure it is connected to WiFi
+        </div>
+        <div style="font-family:'Space Mono',monospace; font-size:0.6rem;
+             color:{T['meta_tx']};">{_offline_msg}</div>
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 st.markdown(f"""
-<div style="padding:0 3rem 2rem;text-align:center;font-family:'Space Mono',monospace;
-font-size:0.58rem;color:{T['meta_tx']};">
+<div style="padding:0 3rem 2rem; text-align:center; font-family:'Space Mono',monospace;
+font-size:0.58rem; color:{T['meta_tx']};">
   ESP8266 &#x2192; Google Sheets &#x2192; Streamlit &middot; Auto-refreshes every 30s
 </div>""", unsafe_allow_html=True)
 
-# Auto-refresh every 30 seconds (sheet updates every ~60s from ESP)
+# Auto-refresh every 30 seconds
 st.markdown("""<meta http-equiv="refresh" content="30">""", unsafe_allow_html=True)
 
 # ─── Footer ───────────────────────────────────────────────────────────────────
