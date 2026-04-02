@@ -14,120 +14,268 @@ from datetime import timezone, timedelta
 
 st.set_page_config(
     page_title="Kolkata Rain Intelligence",
-    page_icon="=",
+    page_icon="🌧️",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-st.markdown("""
+# ─── Theme State ──────────────────────────────────────────────────────────────
+if "theme" not in st.session_state:
+    st.session_state.theme = "dark"
+
+def toggle_theme():
+    st.session_state.theme = "light" if st.session_state.theme == "dark" else "dark"
+
+is_dark = st.session_state.theme == "dark"
+
+# ─── Theme Variables ──────────────────────────────────────────────────────────
+if is_dark:
+    T = {
+        "page_bg":        "#050c1a",
+        "hero_bg":        "linear-gradient(135deg,#050c1a 0%,#0a1f3a 40%,#0d2b52 70%,#091d3a 100%)",
+        "hero_border":    "rgba(56,182,255,0.15)",
+        "left_bg":        "linear-gradient(180deg,#060e1e 0%,#071020 100%)",
+        "left_border":    "rgba(56,182,255,0.1)",
+        "right_bg":       "#050c1a",
+        "text_primary":   "#ffffff",
+        "text_secondary": "#e8f4ff",
+        "text_muted":     "rgba(160,210,255,0.55)",
+        "text_faint":     "rgba(160,210,255,0.4)",
+        "text_label":     "rgba(160,210,255,0.45)",
+        "accent":         "#38b6ff",
+        "accent_glow":    "rgba(56,182,255,0.4)",
+        "accent_bg":      "rgba(56,182,255,0.08)",
+        "accent_border":  "rgba(56,182,255,0.18)",
+        "card_bg":        "rgba(255,255,255,0.03)",
+        "card_border":    "rgba(255,255,255,0.07)",
+        "card_hover_bg":  "rgba(56,182,255,0.07)",
+        "card_hover_bd":  "rgba(56,182,255,0.25)",
+        "now_card_bg":    "linear-gradient(145deg,rgba(56,182,255,0.08),rgba(56,182,255,0.03))",
+        "now_card_bd":    "rgba(56,182,255,0.18)",
+        "alert_rain_bg":  "linear-gradient(135deg,rgba(56,182,255,0.12),rgba(56,182,255,0.06))",
+        "alert_rain_bd":  "rgba(56,182,255,0.3)",
+        "alert_rain_tx":  "#b3ddff",
+        "alert_dry_bg":   "rgba(255,255,255,0.02)",
+        "alert_dry_bd":   "rgba(255,255,255,0.07)",
+        "alert_dry_tx":   "rgba(200,220,255,0.5)",
+        "sec_line":       "rgba(56,182,255,0.1)",
+        "footer_bd":      "rgba(56,182,255,0.08)",
+        "footer_tx":      "rgba(160,210,255,0.3)",
+        "grid_color":     "rgba(255,255,255,0.04)",
+        "tick_color":     "rgba(160,210,255,0.4)",
+        "bar_dry":        "rgba(56,182,255,0.12)",
+        "bar_wet":        "rgba(56,182,255,0.7)",
+        "press_fill":     "rgba(120,60,255,0.05)",
+        "press_line":     "rgba(160,100,255,0.6)",
+        "press_hover":    "#a06cff",
+        "temp_line":      "rgba(255,160,50,0.5)",
+        "btn_bg":         "rgba(56,182,255,0.1)",
+        "btn_tx":         "#38b6ff",
+        "btn_bd":         "rgba(56,182,255,0.3)",
+        "cmp_dry_bg":     "rgba(255,255,255,0.02)",
+        "cmp_dry_bd":     "rgba(255,255,255,0.07)",
+        "cmp_g_bg":       "rgba(66,133,244,0.04)",
+        "cmp_g_bd":       "rgba(66,133,244,0.25)",
+        "cmp_m_bg":       "rgba(56,182,255,0.04)",
+        "cmp_m_bd":       "rgba(56,182,255,0.25)",
+        "cmp_stats_bd":   "rgba(255,255,255,0.06)",
+        "cs_val_tx":      "#e8f4ff",
+        "week_bg":        "rgba(255,255,255,0.02)",
+        "week_bd":        "rgba(255,255,255,0.06)",
+        "week_hi":        "#e8f4ff",
+        "week_lo":        "rgba(160,210,255,0.4)",
+        "pcr_track":      "rgba(255,255,255,0.05)",
+        "pcr_lbl":        "rgba(160,210,255,0.4)",
+        "pcr_val":        "#e8f4ff",
+        "meta_tx":        "rgba(160,210,255,0.3)",
+        "subtitle_tx":    "rgba(160,210,255,0.6)",
+        "toggle_icon":    "☀️",
+        "toggle_label":   "Light Mode",
+        "toggle_bg":      "rgba(255,220,80,0.1)",
+        "toggle_bd":      "rgba(255,220,80,0.3)",
+        "toggle_tx":      "#ffd850",
+        "hoverlabel_bg":  "#0a1f3a",
+        "plot_bg":        "rgba(0,0,0,0)",
+    }
+else:
+    T = {
+        "page_bg":        "#f0f4f8",
+        "hero_bg":        "linear-gradient(135deg,#dbeafe 0%,#bfdbfe 40%,#93c5fd 70%,#bfdbfe 100%)",
+        "hero_border":    "rgba(37,99,235,0.2)",
+        "left_bg":        "linear-gradient(180deg,#e0ecff 0%,#dce8ff 100%)",
+        "left_border":    "rgba(37,99,235,0.15)",
+        "right_bg":       "#f0f4f8",
+        "text_primary":   "#0f172a",
+        "text_secondary": "#1e293b",
+        "text_muted":     "rgba(30,58,138,0.65)",
+        "text_faint":     "rgba(30,58,138,0.5)",
+        "text_label":     "rgba(30,58,138,0.55)",
+        "accent":         "#1d4ed8",
+        "accent_glow":    "rgba(37,99,235,0.3)",
+        "accent_bg":      "rgba(37,99,235,0.08)",
+        "accent_border":  "rgba(37,99,235,0.2)",
+        "card_bg":        "rgba(255,255,255,0.7)",
+        "card_border":    "rgba(37,99,235,0.12)",
+        "card_hover_bg":  "rgba(37,99,235,0.08)",
+        "card_hover_bd":  "rgba(37,99,235,0.3)",
+        "now_card_bg":    "linear-gradient(145deg,rgba(37,99,235,0.1),rgba(37,99,235,0.05))",
+        "now_card_bd":    "rgba(37,99,235,0.2)",
+        "alert_rain_bg":  "linear-gradient(135deg,rgba(37,99,235,0.1),rgba(37,99,235,0.05))",
+        "alert_rain_bd":  "rgba(37,99,235,0.3)",
+        "alert_rain_tx":  "#1e3a8a",
+        "alert_dry_bg":   "rgba(255,255,255,0.5)",
+        "alert_dry_bd":   "rgba(37,99,235,0.1)",
+        "alert_dry_tx":   "rgba(30,58,138,0.55)",
+        "sec_line":       "rgba(37,99,235,0.15)",
+        "footer_bd":      "rgba(37,99,235,0.12)",
+        "footer_tx":      "rgba(30,58,138,0.45)",
+        "grid_color":     "rgba(37,99,235,0.06)",
+        "tick_color":     "rgba(30,58,138,0.45)",
+        "bar_dry":        "rgba(37,99,235,0.15)",
+        "bar_wet":        "rgba(37,99,235,0.65)",
+        "press_fill":     "rgba(109,40,217,0.06)",
+        "press_line":     "rgba(109,40,217,0.55)",
+        "press_hover":    "#7c3aed",
+        "temp_line":      "rgba(234,88,12,0.6)",
+        "btn_bg":         "rgba(37,99,235,0.1)",
+        "btn_tx":         "#1d4ed8",
+        "btn_bd":         "rgba(37,99,235,0.3)",
+        "cmp_dry_bg":     "rgba(255,255,255,0.6)",
+        "cmp_dry_bd":     "rgba(37,99,235,0.1)",
+        "cmp_g_bg":       "rgba(66,133,244,0.07)",
+        "cmp_g_bd":       "rgba(66,133,244,0.3)",
+        "cmp_m_bg":       "rgba(37,99,235,0.07)",
+        "cmp_m_bd":       "rgba(37,99,235,0.3)",
+        "cmp_stats_bd":   "rgba(37,99,235,0.1)",
+        "cs_val_tx":      "#0f172a",
+        "week_bg":        "rgba(255,255,255,0.6)",
+        "week_bd":        "rgba(37,99,235,0.1)",
+        "week_hi":        "#0f172a",
+        "week_lo":        "rgba(30,58,138,0.5)",
+        "pcr_track":      "rgba(37,99,235,0.08)",
+        "pcr_lbl":        "rgba(30,58,138,0.5)",
+        "pcr_val":        "#0f172a",
+        "meta_tx":        "rgba(30,58,138,0.4)",
+        "subtitle_tx":    "rgba(30,58,138,0.6)",
+        "toggle_icon":    "🌙",
+        "toggle_label":   "Dark Mode",
+        "toggle_bg":      "rgba(30,58,138,0.08)",
+        "toggle_bd":      "rgba(30,58,138,0.2)",
+        "toggle_tx":      "#1e3a8a",
+        "hoverlabel_bg":  "#dbeafe",
+        "plot_bg":        "rgba(240,244,248,0)",
+    }
+
+# ─── CSS ──────────────────────────────────────────────────────────────────────
+st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap');
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body, [data-testid="stAppViewContainer"] {
-    background: #050c1a !important;
-    color: #e8f4ff;
+*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+html, body, [data-testid="stAppViewContainer"] {{
+    background: {T['page_bg']} !important;
+    color: {T['text_secondary']};
     font-family: 'Sora', sans-serif;
-}
-[data-testid="stHeader"] { display: none !important; }
-[data-testid="stSidebar"] { display: none !important; }
-section[data-testid="stMain"] > div { padding: 0 !important; }
-.block-container { padding: 0 !important; max-width: 100% !important; }
-footer { display: none !important; }
+}}
+[data-testid="stHeader"] {{ display: none !important; }}
+[data-testid="stSidebar"] {{ display: none !important; }}
+section[data-testid="stMain"] > div {{ padding: 0 !important; }}
+.block-container {{ padding: 0 !important; max-width: 100% !important; }}
+footer {{ display: none !important; }}
 
-.hero {
-    background: linear-gradient(135deg, #050c1a 0%, #0a1f3a 40%, #0d2b52 70%, #091d3a 100%);
+.hero {{
+    background: {T['hero_bg']};
     padding: 2.5rem 3rem 2rem;
-    border-bottom: 1px solid rgba(56,182,255,0.15);
+    border-bottom: 1px solid {T['hero_border']};
     position: relative; overflow: hidden;
-}
-.hero::before {
+}}
+.hero::before {{
     content: '';
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 20% 50%, rgba(56,182,255,0.06) 0%, transparent 60%),
-                radial-gradient(ellipse at 80% 20%, rgba(120,220,255,0.04) 0%, transparent 50%);
+    background: radial-gradient(ellipse at 20% 50%, {T['accent_bg']} 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, {T['accent_bg']} 0%, transparent 50%);
     pointer-events: none;
-}
-.hero-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; position: relative; z-index: 1; }
-.city-block h1 { font-family: 'Sora', sans-serif; font-size: 2.8rem; font-weight: 800; letter-spacing: -1px; color: #fff; line-height: 1; margin-bottom: 0.2rem; }
-.city-block .subtitle { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: rgba(160,210,255,0.6); letter-spacing: 3px; text-transform: uppercase; }
-.live-badge { display: inline-flex; align-items: center; gap: 0.45rem; background: rgba(56,182,255,0.1); border: 1px solid rgba(56,182,255,0.25); border-radius: 100px; padding: 0.35rem 0.9rem; font-family: 'Space Mono', monospace; font-size: 0.65rem; color: #38b6ff; letter-spacing: 2px; text-transform: uppercase; margin-top: 0.5rem; }
-.live-dot { width: 6px; height: 6px; border-radius: 50%; background: #38b6ff; animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.3)} }
+}}
+.hero-top {{ display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; position:relative; z-index:1; }}
+.city-block h1 {{ font-family:'Sora',sans-serif; font-size:2.8rem; font-weight:800; letter-spacing:-1px; color:{T['text_primary']}; line-height:1; margin-bottom:0.2rem; }}
+.city-block .subtitle {{ font-family:'Space Mono',monospace; font-size:0.72rem; color:{T['subtitle_tx']}; letter-spacing:3px; text-transform:uppercase; }}
+.live-badge {{ display:inline-flex; align-items:center; gap:0.45rem; background:{T['accent_bg']}; border:1px solid {T['accent_border']}; border-radius:100px; padding:0.35rem 0.9rem; font-family:'Space Mono',monospace; font-size:0.65rem; color:{T['accent']}; letter-spacing:2px; text-transform:uppercase; margin-top:0.5rem; }}
+.live-dot {{ width:6px; height:6px; border-radius:50%; background:{T['accent']}; animation:pulse 2s infinite; }}
+@keyframes pulse {{ 0%,100%{{opacity:1;transform:scale(1)}} 50%{{opacity:.4;transform:scale(1.3)}} }}
 
-.main-grid { display: grid; grid-template-columns: 340px 1fr; gap: 0; min-height: calc(100vh - 160px); }
-.left-panel { background: linear-gradient(180deg,#060e1e 0%,#071020 100%); border-right: 1px solid rgba(56,182,255,0.1); padding: 2rem 1.8rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.theme-btn {{ display:inline-flex; align-items:center; gap:0.5rem; background:{T['toggle_bg']}; border:1px solid {T['toggle_bd']}; border-radius:100px; padding:0.4rem 1rem; font-family:'Space Mono',monospace; font-size:0.65rem; color:{T['toggle_tx']}; letter-spacing:2px; text-transform:uppercase; cursor:pointer; margin-top:0.5rem; }}
 
-.now-card { background: linear-gradient(145deg,rgba(56,182,255,0.08),rgba(56,182,255,0.03)); border: 1px solid rgba(56,182,255,0.18); border-radius: 20px; padding: 1.8rem; text-align: center; position: relative; overflow: hidden; }
-.now-card::after { content:''; position:absolute; top:-40px; right:-40px; width:120px; height:120px; border-radius:50%; background:radial-gradient(circle,rgba(56,182,255,0.06),transparent 70%); }
-.now-label { font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:3px; text-transform:uppercase; color:rgba(160,210,255,0.5); margin-bottom:1rem; }
-.rain-icon-big { font-size:3.5rem; margin-bottom:0.6rem; display:block; filter:drop-shadow(0 0 20px rgba(56,182,255,0.4)); }
-.prob-number { font-family:'Sora',sans-serif; font-size:4.5rem; font-weight:800; color:#fff; line-height:1; letter-spacing:-3px; }
-.prob-unit { font-size:1.8rem; color:rgba(255,255,255,0.4); font-weight:300; }
-.prob-label { font-size:0.78rem; color:rgba(160,210,255,0.55); margin-top:0.4rem; letter-spacing:1px; }
+.left-panel {{ background:{T['left_bg']}; border-right:1px solid {T['left_border']}; padding:2rem 1.8rem; display:flex; flex-direction:column; gap:1.5rem; }}
+.right-panel {{ padding:2rem 2.2rem; display:flex; flex-direction:column; gap:1.8rem; background:{T['right_bg']}; }}
 
-.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; }
-.stat-pill { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:0.9rem 0.8rem; text-align:center; transition:border-color .2s; }
-.stat-pill:hover { border-color:rgba(56,182,255,0.25); }
-.stat-pill .s-val { font-family:'Space Mono',monospace; font-size:1.25rem; font-weight:700; color:#e8f4ff; display:block; }
-.stat-pill .s-lbl { font-size:0.6rem; color:rgba(160,210,255,0.45); letter-spacing:1.5px; text-transform:uppercase; margin-top:0.15rem; }
+.now-card {{ background:{T['now_card_bg']}; border:1px solid {T['now_card_bd']}; border-radius:20px; padding:1.8rem; text-align:center; position:relative; overflow:hidden; }}
+.now-card::after {{ content:''; position:absolute; top:-40px; right:-40px; width:120px; height:120px; border-radius:50%; background:radial-gradient(circle,{T['accent_bg']},transparent 70%); }}
+.now-label {{ font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:3px; text-transform:uppercase; color:{T['text_muted']}; margin-bottom:1rem; }}
+.rain-icon-big {{ font-size:3.5rem; margin-bottom:0.6rem; display:block; filter:drop-shadow(0 0 20px {T['accent_glow']}); }}
+.prob-number {{ font-family:'Sora',sans-serif; font-size:4.5rem; font-weight:800; color:{T['text_primary']}; line-height:1; letter-spacing:-3px; }}
+.prob-unit {{ font-size:1.8rem; color:{T['text_faint']}; font-weight:300; }}
+.prob-label {{ font-size:0.78rem; color:{T['text_muted']}; margin-top:0.4rem; letter-spacing:1px; }}
 
-.alert-rain { background:linear-gradient(135deg,rgba(56,182,255,0.12),rgba(56,182,255,0.06)); border:1px solid rgba(56,182,255,0.3); border-left:3px solid #38b6ff; border-radius:12px; padding:1rem 1.1rem; font-size:0.82rem; color:#b3ddff; line-height:1.5; }
-.alert-no-rain { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.07); border-left:3px solid rgba(255,255,255,0.15); border-radius:12px; padding:1rem 1.1rem; font-size:0.82rem; color:rgba(200,220,255,0.5); line-height:1.5; }
+.stat-grid {{ display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; }}
+.stat-pill {{ background:{T['card_bg']}; border:1px solid {T['card_border']}; border-radius:14px; padding:0.9rem 0.8rem; text-align:center; transition:border-color .2s; }}
+.stat-pill:hover {{ border-color:{T['card_hover_bd']}; }}
+.stat-pill .s-val {{ font-family:'Space Mono',monospace; font-size:1.25rem; font-weight:700; color:{T['text_secondary']}; display:block; }}
+.stat-pill .s-lbl {{ font-size:0.6rem; color:{T['text_label']}; letter-spacing:1.5px; text-transform:uppercase; margin-top:0.15rem; }}
 
-.right-panel { padding:2rem 2.2rem; display:flex; flex-direction:column; gap:1.8rem; background:#050c1a; }
-.sec-header { display:flex; align-items:center; gap:0.7rem; margin-bottom:1rem; }
-.sec-title { font-family:'Sora',sans-serif; font-size:0.78rem; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:rgba(160,210,255,0.55); }
-.sec-line { flex:1; height:1px; background:rgba(56,182,255,0.1); }
+.alert-rain {{ background:{T['alert_rain_bg']}; border:1px solid {T['alert_rain_bd']}; border-left:3px solid {T['accent']}; border-radius:12px; padding:1rem 1.1rem; font-size:0.82rem; color:{T['alert_rain_tx']}; line-height:1.5; }}
+.alert-no-rain {{ background:{T['alert_dry_bg']}; border:1px solid {T['alert_dry_bd']}; border-left:3px solid {T['alert_dry_bd']}; border-radius:12px; padding:1rem 1.1rem; font-size:0.82rem; color:{T['alert_dry_tx']}; line-height:1.5; }}
 
-.forecast-scroll { display:flex; gap:0.8rem; overflow-x:auto; padding-bottom:0.5rem; scrollbar-width:thin; scrollbar-color:rgba(56,182,255,0.2) transparent; }
-.fc-card { flex:0 0 120px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:16px; padding:1rem 0.8rem; text-align:center; transition:all .25s ease; }
-.fc-card:hover { background:rgba(56,182,255,0.07); border-color:rgba(56,182,255,0.25); transform:translateY(-2px); }
-.fc-card.rain { background:rgba(56,182,255,0.08); border-color:rgba(56,182,255,0.2); }
-.fc-time { font-family:'Space Mono',monospace; font-size:0.62rem; color:rgba(160,210,255,0.45); letter-spacing:1px; text-transform:uppercase; margin-bottom:0.6rem; }
-.fc-icon { font-size:1.6rem; margin-bottom:0.4rem; }
-.fc-prob { font-family:'Sora',sans-serif; font-size:1.1rem; font-weight:700; color:#e8f4ff; }
-.fc-mm { font-size:0.62rem; color:rgba(160,210,255,0.4); margin-top:0.2rem; font-family:'Space Mono',monospace; }
+.sec-header {{ display:flex; align-items:center; gap:0.7rem; margin-bottom:1rem; }}
+.sec-title {{ font-family:'Sora',sans-serif; font-size:0.78rem; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:{T['text_muted']}; }}
+.sec-line {{ flex:1; height:1px; background:{T['sec_line']}; }}
 
-.footer-bar { padding:1rem 3rem; border-top:1px solid rgba(56,182,255,0.08); display:flex; justify-content:space-between; align-items:center; font-family:'Space Mono',monospace; font-size:0.6rem; color:rgba(160,210,255,0.3); letter-spacing:1.5px; text-transform:uppercase; }
+.forecast-scroll {{ display:flex; gap:0.8rem; overflow-x:auto; padding-bottom:0.5rem; scrollbar-width:thin; scrollbar-color:{T['accent_border']} transparent; }}
+.fc-card {{ flex:0 0 120px; background:{T['card_bg']}; border:1px solid {T['card_border']}; border-radius:16px; padding:1rem 0.8rem; text-align:center; transition:all .25s ease; }}
+.fc-card:hover {{ background:{T['card_hover_bg']}; border-color:{T['card_hover_bd']}; transform:translateY(-2px); }}
+.fc-card.rain {{ background:{T['accent_bg']}; border-color:{T['accent_border']}; }}
+.fc-time {{ font-family:'Space Mono',monospace; font-size:0.62rem; color:{T['text_faint']}; letter-spacing:1px; text-transform:uppercase; margin-bottom:0.6rem; }}
+.fc-icon {{ font-size:1.6rem; margin-bottom:0.4rem; }}
+.fc-prob {{ font-family:'Sora',sans-serif; font-size:1.1rem; font-weight:700; color:{T['text_secondary']}; }}
+.fc-mm {{ font-size:0.62rem; color:{T['text_faint']}; margin-top:0.2rem; font-family:'Space Mono',monospace; }}
 
-div[data-testid="stHorizontalBlock"] { gap:0 !important; }
-.stButton > button { background:rgba(56,182,255,0.1) !important; color:#38b6ff !important; border:1px solid rgba(56,182,255,0.3) !important; border-radius:100px !important; font-family:'Space Mono',monospace !important; font-size:0.65rem !important; letter-spacing:2px !important; text-transform:uppercase !important; padding:0.4rem 1.2rem !important; }
-.stButton > button:hover { background:rgba(56,182,255,0.2) !important; border-color:rgba(56,182,255,0.5) !important; color:#fff !important; }
+.footer-bar {{ padding:1rem 3rem; border-top:1px solid {T['footer_bd']}; display:flex; justify-content:space-between; align-items:center; font-family:'Space Mono',monospace; font-size:0.6rem; color:{T['footer_tx']}; letter-spacing:1.5px; text-transform:uppercase; }}
 
-/* ---- Comparison Section ---- */
-.cmp-wrap { padding: 2rem 3rem; border-top: 1px solid rgba(56,182,255,0.08); }
-.cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
-.cmp-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 1.5rem; }
-.cmp-card.google { border-color: rgba(66,133,244,0.25); background: rgba(66,133,244,0.04); }
-.cmp-card.ml { border-color: rgba(56,182,255,0.25); background: rgba(56,182,255,0.04); }
-.cmp-badge { font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:2px; text-transform:uppercase; padding:0.25rem 0.7rem; border-radius:100px; display:inline-block; margin-bottom:1rem; }
-.badge-google { background:rgba(66,133,244,0.15); border:1px solid rgba(66,133,244,0.3); color:#6aa0f5; }
-.badge-ml { background:rgba(56,182,255,0.15); border:1px solid rgba(56,182,255,0.3); color:#38b6ff; }
-.cmp-main { display:flex; align-items:center; gap:1rem; margin-bottom:1.2rem; }
-.cmp-icon { font-size:2.8rem; }
-.cmp-temp { font-family:'Sora',sans-serif; font-size:3rem; font-weight:800; color:#fff; line-height:1; letter-spacing:-2px; }
-.cmp-desc { font-size:0.8rem; color:rgba(160,210,255,0.6); margin-top:0.2rem; }
-.cmp-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:0.6rem; border-top:1px solid rgba(255,255,255,0.06); padding-top:1rem; }
-.cs-item { text-align:center; }
-.cs-val { font-family:'Space Mono',monospace; font-size:0.95rem; font-weight:700; color:#e8f4ff; display:block; }
-.cs-lbl { font-size:0.58rem; color:rgba(160,210,255,0.4); letter-spacing:1.5px; text-transform:uppercase; margin-top:0.1rem; }
+div[data-testid="stHorizontalBlock"] {{ gap:0 !important; }}
+.stButton > button {{ background:{T['btn_bg']} !important; color:{T['btn_tx']} !important; border:1px solid {T['btn_bd']} !important; border-radius:100px !important; font-family:'Space Mono',monospace !important; font-size:0.65rem !important; letter-spacing:2px !important; text-transform:uppercase !important; padding:0.4rem 1.2rem !important; transition:all .2s !important; }}
+.stButton > button:hover {{ background:{T['card_hover_bg']} !important; border-color:{T['card_hover_bd']} !important; }}
 
-.pcr-row { display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem; }
-.pcr-lbl { font-family:'Space Mono',monospace; font-size:0.6rem; color:rgba(160,210,255,0.4); width:72px; text-align:right; letter-spacing:1px; text-transform:uppercase; flex-shrink:0; }
-.pcr-wrap { flex:1; height:8px; background:rgba(255,255,255,0.05); border-radius:100px; overflow:hidden; }
-.pcr-fill { height:100%; border-radius:100px; }
-.bar-g { background: linear-gradient(90deg,#4285f4,#6aa0f5); }
-.bar-m { background: linear-gradient(90deg,#38b6ff,#7dd3fc); }
-.pcr-val { font-family:'Space Mono',monospace; font-size:0.65rem; color:#e8f4ff; width:38px; flex-shrink:0; }
+/* Comparison */
+.cmp-wrap {{ padding:2rem 3rem; border-top:1px solid {T['footer_bd']}; }}
+.cmp-card {{ background:{T['cmp_dry_bg']}; border:1px solid {T['cmp_dry_bd']}; border-radius:20px; padding:1.5rem; }}
+.cmp-card.google {{ border-color:{T['cmp_g_bd']}; background:{T['cmp_g_bg']}; }}
+.cmp-card.ml {{ border-color:{T['cmp_m_bd']}; background:{T['cmp_m_bg']}; }}
+.cmp-badge {{ font-family:'Space Mono',monospace; font-size:0.6rem; letter-spacing:2px; text-transform:uppercase; padding:0.25rem 0.7rem; border-radius:100px; display:inline-block; margin-bottom:1rem; }}
+.badge-google {{ background:rgba(66,133,244,0.15); border:1px solid rgba(66,133,244,0.3); color:#4285f4; }}
+.badge-ml {{ background:{T['accent_bg']}; border:1px solid {T['accent_border']}; color:{T['accent']}; }}
+.cmp-main {{ display:flex; align-items:center; gap:1rem; margin-bottom:1.2rem; }}
+.cmp-icon {{ font-size:2.8rem; }}
+.cmp-temp {{ font-family:'Sora',sans-serif; font-size:3rem; font-weight:800; color:{T['text_primary']}; line-height:1; letter-spacing:-2px; }}
+.cmp-desc {{ font-size:0.8rem; color:{T['text_muted']}; margin-top:0.2rem; }}
+.cmp-stats {{ display:grid; grid-template-columns:repeat(3,1fr); gap:0.6rem; border-top:1px solid {T['cmp_stats_bd']}; padding-top:1rem; }}
+.cs-item {{ text-align:center; }}
+.cs-val {{ font-family:'Space Mono',monospace; font-size:0.95rem; font-weight:700; color:{T['cs_val_tx']}; display:block; }}
+.cs-lbl {{ font-size:0.58rem; color:{T['text_faint']}; letter-spacing:1.5px; text-transform:uppercase; margin-top:0.1rem; }}
 
-.week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:0.6rem; margin-top:1rem; }
-.week-card { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:14px; padding:0.8rem 0.4rem; text-align:center; }
-.week-day { font-family:'Space Mono',monospace; font-size:0.6rem; color:rgba(160,210,255,0.4); letter-spacing:1px; text-transform:uppercase; margin-bottom:0.4rem; }
-.week-icon { font-size:1.4rem; margin-bottom:0.3rem; }
-.week-hi { font-family:'Sora',sans-serif; font-size:0.9rem; font-weight:700; color:#e8f4ff; }
-.week-lo { font-size:0.75rem; color:rgba(160,210,255,0.4); }
-.week-rain { font-family:'Space Mono',monospace; font-size:0.6rem; color:#38b6ff; margin-top:0.3rem; }
+.pcr-row {{ display:flex; align-items:center; gap:0.8rem; margin-bottom:0.6rem; }}
+.pcr-lbl {{ font-family:'Space Mono',monospace; font-size:0.6rem; color:{T['pcr_lbl']}; width:72px; text-align:right; letter-spacing:1px; text-transform:uppercase; flex-shrink:0; }}
+.pcr-wrap {{ flex:1; height:8px; background:{T['pcr_track']}; border-radius:100px; overflow:hidden; }}
+.pcr-fill {{ height:100%; border-radius:100px; }}
+.bar-g {{ background:linear-gradient(90deg,#4285f4,#6aa0f5); }}
+.bar-m {{ background:linear-gradient(90deg,{T['accent']},#7dd3fc); }}
+.pcr-val {{ font-family:'Space Mono',monospace; font-size:0.65rem; color:{T['pcr_val']}; width:38px; flex-shrink:0; }}
+
+.week-grid {{ display:grid; grid-template-columns:repeat(7,1fr); gap:0.6rem; margin-top:1rem; }}
+.week-card {{ background:{T['week_bg']}; border:1px solid {T['week_bd']}; border-radius:14px; padding:0.8rem 0.4rem; text-align:center; }}
+.week-day {{ font-family:'Space Mono',monospace; font-size:0.6rem; color:{T['text_faint']}; letter-spacing:1px; text-transform:uppercase; margin-bottom:0.4rem; }}
+.week-icon {{ font-size:1.4rem; margin-bottom:0.3rem; }}
+.week-hi {{ font-family:'Sora',sans-serif; font-size:0.9rem; font-weight:700; color:{T['week_hi']}; }}
+.week-lo {{ font-size:0.75rem; color:{T['week_lo']}; }}
+.week-rain {{ font-family:'Space Mono',monospace; font-size:0.6rem; color:{T['accent']}; margin-top:0.3rem; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -244,7 +392,6 @@ def fetch_owm_realtime(_key):
         'Rain_mm':    d.get('rain',{}).get('1h', 0.0),
         'wind_speed': d['wind'].get('speed', 0),
         'visibility': d.get('visibility', 10000) / 1000,
-        'feels_like': d['main'].get('feels_like', d['main']['temp']),
     }
 
 @st.cache_data(ttl=600)
@@ -286,63 +433,52 @@ def run_prediction():
         warnings.simplefilter("ignore")
         stage1, stage2, feat_cols, config = load_models()
     THRESHOLD = config['threshold']
-
     df_raw = fetch_open_meteo_history()
     current_ist = now_ist()
-
     rt = None
     try:
         rt = fetch_owm_realtime(OWM_KEY)
     except Exception:
         pass
-
     df_raw.loc[df_raw['time'] > current_ist, 'Rain_mm'] = 0.0
     df_raw['Spec_Hum'] = rh_to_q(df_raw['RH_pct'], df_raw['Temp_C'], df_raw['Press_hPa'])
-
     df_3h = df_raw.set_index('time').resample('3h').agg(
         {'Temp_C':'mean','Spec_Hum':'mean','Press_hPa':'mean','Rain_mm':'sum'}
     )
     df_3h['Rainfall_mm_hr'] = df_3h['Rain_mm'] / 3.0
     df_3h = df_3h.drop(columns=['Rain_mm']).dropna(subset=['Temp_C','Spec_Hum','Press_hPa']).reset_index()
     df_3h['Rainfall_mm_hr'] = df_3h['Rainfall_mm_hr'].fillna(0)
-
     df_past   = df_3h[df_3h['time'] <= current_ist].copy()
     df_future = df_3h[df_3h['time'] >  current_ist].head(8).copy()
     df_comb   = pd.concat([df_past, df_future]).reset_index(drop=True)
-
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        X_all = build_features(df_comb, feat_cols)
-
+        X_all    = build_features(df_comb, feat_cols)
         X_now    = X_all[[len(df_past)-1], :]
         now_prob = stage1.predict_proba(X_now)[0, 1]
         now_flag = now_prob > THRESHOLD
         now_amt  = 0.0
         if now_flag:
             now_amt = float(np.clip(np.expm1(stage2.predict(X_now)), 0, None))
-
-        n_past       = len(df_past)
-        X_fut        = X_all[n_past:n_past+len(df_future), :]
-        probs        = stage1.predict_proba(X_fut)[:, 1]
-        flags        = probs > THRESHOLD
-        amounts      = np.zeros(len(df_future))
+        n_past  = len(df_past)
+        X_fut   = X_all[n_past:n_past+len(df_future), :]
+        probs   = stage1.predict_proba(X_fut)[:, 1]
+        flags   = probs > THRESHOLD
+        amounts = np.zeros(len(df_future))
         if flags.sum() > 0:
             amounts[flags] = np.clip(np.expm1(stage2.predict(X_fut[flags])), 0, None)
-
     forecast_df = pd.DataFrame({
         'time_ist':   df_future['time'].values,
         'rain_prob':  np.round(probs * 100, 1),
         'rain_flag':  flags,
         'rain_mm_hr': np.round(amounts, 3),
     })
-
     cutoff  = current_ist - timedelta(hours=48)
     hist_df = df_past[df_past['time'] >= cutoff][['time','Rainfall_mm_hr','Temp_C','Press_hPa']].copy()
-
     return {
-        'now_prob':   round(float(now_prob)*100, 1),
-        'now_flag':   bool(now_flag),
-        'now_amount': round(now_amt, 3),
+        'now_prob':    round(float(now_prob)*100, 1),
+        'now_flag':    bool(now_flag),
+        'now_amount':  round(now_amt, 3),
         'current_ist': current_ist,
         'forecast_df': forecast_df,
         'hist_df':     hist_df,
@@ -352,17 +488,28 @@ def run_prediction():
     }
 
 # ─── Hero ─────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="hero">
-  <div class="hero-top">
-    <div class="city-block">
-      <h1>Kolkata</h1>
-      <div class="subtitle">Rain Intelligence Dashboard &nbsp; 22.57N 88.36E</div>
-      <div class="live-badge"><span class="live-dot"></span> Live AI Forecast</div>
+hero_left, hero_right = st.columns([4, 1])
+with hero_left:
+    st.markdown(f"""
+    <div class="hero">
+      <div class="hero-top">
+        <div class="city-block">
+          <h1>🌧 Kolkata</h1>
+          <div class="subtitle">Rain Intelligence Dashboard &nbsp;&middot;&nbsp; 22.57N 88.36E</div>
+          <div class="live-badge"><span class="live-dot"></span> Live AI Forecast</div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+with hero_right:
+    st.markdown("<div style='padding:2rem 1rem 0 0; text-align:right;'>", unsafe_allow_html=True)
+    st.button(
+        f"{T['toggle_icon']}  {T['toggle_label']}",
+        on_click=toggle_theme,
+        key="theme_toggle"
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ─── Load Data ────────────────────────────────────────────────────────────────
 with st.spinner(""):
@@ -370,36 +517,35 @@ with st.spinner(""):
         data = run_prediction()
     except Exception as e:
         import traceback
-        st.error(f"Error loading data: {e}")
+        st.error(f"Error: {e}")
         st.code(traceback.format_exc())
         st.stop()
 
-prob   = data['now_prob']
-flag   = data['now_flag']
-amount = data['now_amount']
-rt     = data['rt']
-forecast_df  = data['forecast_df']
-hist_df      = data['hist_df']
-current_ist  = data['current_ist']
-icon         = rain_icon(prob, flag, amount)
+prob        = data['now_prob']
+flag        = data['now_flag']
+amount      = data['now_amount']
+rt          = data['rt']
+forecast_df = data['forecast_df']
+hist_df     = data['hist_df']
+current_ist = data['current_ist']
+icon        = rain_icon(prob, flag, amount)
 
-# ─── Main Two-Column Layout ───────────────────────────────────────────────────
+# ─── Left + Right Panels ──────────────────────────────────────────────────────
 left_col, right_col = st.columns([1.1, 2.6], gap="small")
 
 with left_col:
-    amt_str    = f"{amount:.2f}" if flag else "0.00"
-    temp_str   = f"{rt['Temp_C']:.1f}°C"    if rt else "—"
-    hum_str    = f"{rt['RH_pct']:.0f}%"     if rt else "—"
-    press_str  = f"{rt['Press_hPa']:.0f}"   if rt else "—"
-    wind_str   = f"{rt['wind_speed']:.1f}"  if rt else "—"
-    vis_str    = f"{rt['visibility']:.1f}"  if rt else "—"
+    amt_str   = f"{amount:.2f}" if flag else "0.00"
+    temp_str  = f"{rt['Temp_C']:.1f}°C"   if rt else "—"
+    hum_str   = f"{rt['RH_pct']:.0f}%"    if rt else "—"
+    press_str = f"{rt['Press_hPa']:.0f}"  if rt else "—"
+    wind_str  = f"{rt['wind_speed']:.1f}" if rt else "—"
+    vis_str   = f"{rt['visibility']:.1f}" if rt else "—"
     alert_html = (
-        f"<div class='alert-rain'>Rain Alert — Intensity: <b>{amount} mm/hr</b>. Carry an umbrella.</div>"
+        f"<div class='alert-rain'>🌧 Rain Alert — Intensity: <b>{amount} mm/hr</b>. Carry an umbrella.</div>"
         if flag else
-        "<div class='alert-no-rain'>Conditions look dry right now.</div>"
+        "<div class='alert-no-rain'>☀️ Conditions look dry right now.</div>"
     )
     meta = data['config']
-
     st.markdown(f"""
     <div class="left-panel">
       <div class="now-card">
@@ -417,7 +563,7 @@ with left_col:
         <div class="stat-pill"><span class="s-val">{vis_str}</span><span class="s-lbl">km Vis.</span></div>
       </div>
       {alert_html}
-      <div style="font-family:'Space Mono',monospace;font-size:0.58rem;color:rgba(160,210,255,0.3);line-height:1.8;padding-top:0.5rem;">
+      <div style="font-family:'Space Mono',monospace;font-size:0.58rem;color:{T['meta_tx']};line-height:1.8;padding-top:0.5rem;">
         MODEL &middot; XGBoost Two-Stage<br>
         THRESHOLD &middot; {meta['threshold']:.4f}<br>
         TRAINED ON &middot; {meta['trained_on']}<br>
@@ -429,10 +575,10 @@ with left_col:
     """, unsafe_allow_html=True)
 
 with right_col:
-    st.markdown("<div class='right-panel'>", unsafe_allow_html=True)
+    st.markdown(f"<div class='right-panel'>", unsafe_allow_html=True)
 
-    # 24h forecast cards
-    st.markdown("""<div class="sec-header"><span class="sec-title">24-Hour Forecast</span><span class="sec-line"></span></div>""", unsafe_allow_html=True)
+    # 24h Forecast Cards
+    st.markdown(f"""<div class="sec-header"><span class="sec-title">24-Hour Forecast</span><span class="sec-line"></span></div>""", unsafe_allow_html=True)
     cards_html = '<div class="forecast-scroll">'
     for _, row in forecast_df.iterrows():
         t = pd.Timestamp(row['time_ist'])
@@ -447,79 +593,79 @@ with right_col:
     cards_html += '</div>'
     st.markdown(cards_html, unsafe_allow_html=True)
 
-    # Forecast probability chart
-    st.markdown("""<div class="sec-header" style="margin-top:1.5rem;"><span class="sec-title">Rain Probability Curve</span><span class="sec-line"></span></div>""", unsafe_allow_html=True)
+    # Probability Chart
+    st.markdown(f"""<div class="sec-header" style="margin-top:1.5rem;"><span class="sec-title">Rain Probability Curve</span><span class="sec-line"></span></div>""", unsafe_allow_html=True)
     times_fc = [pd.Timestamp(t).strftime('%d %b %H:%M') for t in forecast_df['time_ist']]
     fig_fc = go.Figure()
     fig_fc.add_hline(
-        y=data['threshold']*100, line_dash="dot", line_color="rgba(255,200,0,0.3)",
+        y=data['threshold']*100, line_dash="dot", line_color=T['accent_border'],
         annotation_text=f"Threshold {data['threshold']*100:.1f}%",
-        annotation=dict(font=dict(color="rgba(255,200,100,0.5)", size=10))
+        annotation=dict(font=dict(color=T['text_faint'], size=10))
     )
-    fig_fc.add_trace(go.Scatter(x=times_fc, y=forecast_df['rain_prob'], fill='tozeroy', fillcolor='rgba(56,182,255,0.07)', line=dict(color='rgba(0,0,0,0)'), showlegend=False, hoverinfo='skip'))
+    fig_fc.add_trace(go.Scatter(x=times_fc, y=forecast_df['rain_prob'], fill='tozeroy', fillcolor=T['accent_bg'], line=dict(color='rgba(0,0,0,0)'), showlegend=False, hoverinfo='skip'))
     fig_fc.add_trace(go.Scatter(
         x=times_fc, y=forecast_df['rain_prob'], mode='lines+markers',
-        line=dict(color='#38b6ff', width=2.5),
-        marker=dict(size=[12 if f else 7 for f in forecast_df['rain_flag']], color=['#38b6ff' if f else '#1a4a6e' for f in forecast_df['rain_flag']], line=dict(color='#38b6ff', width=1.5)),
-        name='Rain Probability', hovertemplate='<b>%{x}</b><br>%{y:.1f}%<extra></extra>'
+        line=dict(color=T['accent'], width=2.5),
+        marker=dict(size=[12 if f else 7 for f in forecast_df['rain_flag']], color=[T['accent'] if f else T['card_bg'] for f in forecast_df['rain_flag']], line=dict(color=T['accent'], width=1.5)),
+        hovertemplate='<b>%{x}</b><br>%{y:.1f}%<extra></extra>'
     ))
     fig_fc.update_layout(
         paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=220,
         margin=dict(l=10,r=10,t=10,b=10), showlegend=False,
-        yaxis=dict(range=[0,105], ticksuffix='%', gridcolor='rgba(255,255,255,0.04)', tickfont=dict(color='rgba(160,210,255,0.4)', size=10, family='Space Mono'), zeroline=False),
-        xaxis=dict(gridcolor='rgba(255,255,255,0.04)', tickangle=-30, tickfont=dict(color='rgba(160,210,255,0.4)', size=9, family='Space Mono')),
-        hoverlabel=dict(bgcolor='#0a1f3a', font=dict(color='#e8f4ff'), bordercolor='#38b6ff')
+        yaxis=dict(range=[0,105], ticksuffix='%', gridcolor=T['grid_color'], tickfont=dict(color=T['tick_color'], size=10, family='Space Mono'), zeroline=False),
+        xaxis=dict(gridcolor=T['grid_color'], tickangle=-30, tickfont=dict(color=T['tick_color'], size=9, family='Space Mono')),
+        hoverlabel=dict(bgcolor=T['hoverlabel_bg'], font=dict(color=T['text_secondary']), bordercolor=T['accent'])
     )
     st.plotly_chart(fig_fc, use_container_width=True, config={'displayModeBar': False})
 
-    # Historical rain
+    # Historical Rain
     if not hist_df.empty:
-        st.markdown("""<div class="sec-header"><span class="sec-title">Historical Rainfall &middot; Last 48 Hours</span><span class="sec-line"></span></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="sec-header"><span class="sec-title">Historical Rainfall &middot; Last 48 Hours</span><span class="sec-line"></span></div>""", unsafe_allow_html=True)
         hist_times = [pd.Timestamp(t).strftime('%d %b %H:%M') for t in hist_df['time']]
         fig_hist = go.Figure()
         fig_hist.add_trace(go.Bar(
             x=hist_times, y=hist_df['Rainfall_mm_hr'],
-            marker=dict(color=['rgba(56,182,255,0.7)' if v > 0.1 else 'rgba(56,182,255,0.12)' for v in hist_df['Rainfall_mm_hr']], line=dict(color='rgba(56,182,255,0.2)', width=0.5)),
+            marker=dict(color=[T['bar_wet'] if v > 0.1 else T['bar_dry'] for v in hist_df['Rainfall_mm_hr']]),
             hovertemplate='<b>%{x}</b><br>%{y:.3f} mm/hr<extra></extra>'
         ))
         fig_hist.add_trace(go.Scatter(
             x=hist_times, y=hist_df['Temp_C'], mode='lines', yaxis='y2',
-            line=dict(color='rgba(255,160,50,0.5)', width=1.5, dash='dot'),
-            name='Temp', hovertemplate='Temp: %{y:.1f}C<extra></extra>'
+            line=dict(color=T['temp_line'], width=1.5, dash='dot'),
+            hovertemplate='Temp: %{y:.1f}C<extra></extra>'
         ))
         fig_hist.update_layout(
             paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=220,
             margin=dict(l=10,r=50,t=10,b=10), showlegend=False, barmode='overlay',
-            yaxis=dict(title='mm/hr', gridcolor='rgba(255,255,255,0.04)', tickfont=dict(color='rgba(160,210,255,0.4)', size=10, family='Space Mono'), zeroline=False, title_font=dict(color='rgba(160,210,255,0.3)', size=10)),
-            yaxis2=dict(title='C', overlaying='y', side='right', showgrid=False, tickfont=dict(color='rgba(255,160,50,0.4)', size=10, family='Space Mono'), title_font=dict(color='rgba(255,160,50,0.3)', size=10)),
-            xaxis=dict(gridcolor='rgba(255,255,255,0.04)', tickangle=-30, tickfont=dict(color='rgba(160,210,255,0.4)', size=9, family='Space Mono')),
-            hoverlabel=dict(bgcolor='#0a1f3a', font=dict(color='#e8f4ff'), bordercolor='#38b6ff')
+            yaxis=dict(title='mm/hr', gridcolor=T['grid_color'], tickfont=dict(color=T['tick_color'], size=10, family='Space Mono'), zeroline=False, title_font=dict(color=T['tick_color'], size=10)),
+            yaxis2=dict(title='C', overlaying='y', side='right', showgrid=False, tickfont=dict(color=T['tick_color'], size=10, family='Space Mono'), title_font=dict(color=T['tick_color'], size=10)),
+            xaxis=dict(gridcolor=T['grid_color'], tickangle=-30, tickfont=dict(color=T['tick_color'], size=9, family='Space Mono')),
+            hoverlabel=dict(bgcolor=T['hoverlabel_bg'], font=dict(color=T['text_secondary']), bordercolor=T['accent'])
         )
         st.plotly_chart(fig_hist, use_container_width=True, config={'displayModeBar': False})
 
-    # Pressure trend
+    # Pressure Chart
     if not hist_df.empty:
-        st.markdown("""<div class="sec-header"><span class="sec-title">Pressure Trend &middot; Last 48 Hours</span><span class="sec-line"></span></div>""", unsafe_allow_html=True)
+        st.markdown(f"""<div class="sec-header"><span class="sec-title">Pressure Trend &middot; Last 48 Hours</span><span class="sec-line"></span></div>""", unsafe_allow_html=True)
         fig_press = go.Figure()
         fig_press.add_trace(go.Scatter(
             x=hist_times, y=hist_df['Press_hPa'], mode='lines',
-            fill='tozeroy', fillcolor='rgba(120,60,255,0.05)',
-            line=dict(color='rgba(160,100,255,0.6)', width=2),
+            fill='tozeroy', fillcolor=T['press_fill'],
+            line=dict(color=T['press_line'], width=2),
             hovertemplate='<b>%{x}</b><br>%{y:.1f} hPa<extra></extra>'
         ))
         fig_press.update_layout(
             paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=160,
             margin=dict(l=10,r=10,t=10,b=10), showlegend=False,
-            yaxis=dict(gridcolor='rgba(255,255,255,0.04)', tickfont=dict(color='rgba(180,140,255,0.4)', size=10, family='Space Mono'), zeroline=False, ticksuffix=' hPa'),
-            xaxis=dict(gridcolor='rgba(255,255,255,0.04)', tickangle=-30, tickfont=dict(color='rgba(160,210,255,0.4)', size=9, family='Space Mono')),
-            hoverlabel=dict(bgcolor='#0a1f3a', font=dict(color='#e8f4ff'), bordercolor='#a06cff')
+            yaxis=dict(gridcolor=T['grid_color'], tickfont=dict(color=T['tick_color'], size=10, family='Space Mono'), zeroline=False, ticksuffix=' hPa'),
+            xaxis=dict(gridcolor=T['grid_color'], tickangle=-30, tickfont=dict(color=T['tick_color'], size=9, family='Space Mono')),
+            hoverlabel=dict(bgcolor=T['hoverlabel_bg'], font=dict(color=T['text_secondary']), bordercolor=T['press_hover'])
         )
         st.plotly_chart(fig_press, use_container_width=True, config={'displayModeBar': False})
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ─── Comparison Section ───────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <div class="cmp-wrap">
   <div class="sec-header">
     <span class="sec-title">ML Model vs Open-Meteo (Google Weather Source)</span>
@@ -549,19 +695,15 @@ if comp:
     g_label, g_icon = wmo_to_label(g_wcode)
 
     h_times_raw = pd.to_datetime(hrly['time'])
-    if h_times_raw.dt.tz is not None:
-        h_times = h_times_raw.dt.tz_convert(None)
-    else:
-        h_times = h_times_raw
+    h_times = h_times_raw.dt.tz_convert(None) if h_times_raw.dt.tz is not None else h_times_raw
     now_scalar = pd.Timestamp(now_ist())
-    ci = int((h_times - now_scalar).abs().argmin())
-    g_prob   = hrly.get('precipitation_probability', [0]*len(h_times))[ci]
-    g_rayn   = "YES" if g_rain > 0.1 else "NO"
-
-    ml_rayn  = "YES" if flag else "NO"
-    rt_hum   = f"{rt['RH_pct']:.0f}%"    if rt else "N/A"
-    rt_temp  = f"{rt['Temp_C']:.1f}C"    if rt else "N/A"
-    valf1    = f"{data['config']['val_f1']:.3f}"
+    ci      = int((h_times - now_scalar).abs().argmin())
+    g_prob  = hrly.get('precipitation_probability', [0]*len(h_times))[ci]
+    g_rayn  = "YES" if g_rain > 0.1 else "NO"
+    ml_rayn = "YES" if flag else "NO"
+    rt_hum  = f"{rt['RH_pct']:.0f}%"  if rt else "N/A"
+    rt_temp = f"{rt['Temp_C']:.1f}C"  if rt else "N/A"
+    valf1   = f"{data['config']['val_f1']:.3f}"
 
     g_col, m_col = st.columns(2, gap="medium")
 
@@ -609,8 +751,8 @@ if comp:
         </div>
         """, unsafe_allow_html=True)
 
-    # Head-to-head probability bars
-    st.markdown("""
+    # Probability bars
+    st.markdown(f"""
     <div style="padding:1.5rem 3rem 0.5rem;">
       <div class="sec-header">
         <span class="sec-title">Rain Probability Head-to-Head (Next 24h)</span>
@@ -625,12 +767,13 @@ if comp:
         idx = int((h_times - pd.Timestamp(ft).replace(tzinfo=None)).abs().argmin())
         om_probs.append(hrly.get('precipitation_probability', [0]*len(h_times))[idx])
 
+    time_label_color = T['text_faint']
     bars = '<div style="padding:0 3rem 1rem;">'
     for ft, ml_p, om_p in zip(future_ts, forecast_df['rain_prob'].tolist(), om_probs):
         label = ft.strftime('%a %H:%M')
         bars += f"""
         <div style="margin-bottom:1rem;">
-          <div style="font-family:'Space Mono',monospace;font-size:0.62rem;color:rgba(160,210,255,0.5);letter-spacing:1px;margin-bottom:0.4rem;">{label}</div>
+          <div style="font-family:'Space Mono',monospace;font-size:0.62rem;color:{time_label_color};letter-spacing:1px;margin-bottom:0.4rem;">{label}</div>
           <div class="pcr-row">
             <span class="pcr-lbl">Open-Meteo</span>
             <div class="pcr-wrap"><div class="pcr-fill bar-g" style="width:{om_p}%"></div></div>
@@ -645,8 +788,8 @@ if comp:
     bars += '</div>'
     st.markdown(bars, unsafe_allow_html=True)
 
-    # 7-day outlook
-    st.markdown("""
+    # 7-Day Outlook
+    st.markdown(f"""
     <div style="padding:0.5rem 3rem 0;">
       <div class="sec-header">
         <span class="sec-title">7-Day Outlook &middot; Open-Meteo</span>
@@ -655,7 +798,8 @@ if comp:
     </div>
     """, unsafe_allow_html=True)
 
-    dates = pd.to_datetime(daily['time']).tz_localize(None)
+    dates_raw = pd.to_datetime(daily['time'])
+    dates = dates_raw.tz_convert(None) if dates_raw.dt.tz is not None else dates_raw
     week  = '<div style="padding:0 3rem 2rem;"><div class="week-grid">'
     for i in range(min(7, len(dates))):
         d      = dates[i]
@@ -677,7 +821,7 @@ if comp:
     st.markdown(week, unsafe_allow_html=True)
 
 else:
-    st.markdown("""<div style="padding:1rem 3rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:rgba(160,210,255,0.3);">Comparison data unavailable.</div>""", unsafe_allow_html=True)
+    st.markdown(f"""<div style="padding:1rem 3rem;font-family:'Space Mono',monospace;font-size:0.7rem;color:{T['meta_tx']};">Comparison data unavailable.</div>""", unsafe_allow_html=True)
 
 # ─── Footer ───────────────────────────────────────────────────────────────────
 rain_slots = int(forecast_df['rain_flag'].sum())
@@ -692,6 +836,6 @@ st.markdown(f"""
 
 c1, c2, c3 = st.columns([3, 1, 3])
 with c2:
-    if st.button("Refresh"):
+    if st.button("↻ Refresh"):
         st.cache_data.clear()
         st.rerun()
