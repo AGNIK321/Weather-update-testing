@@ -506,7 +506,7 @@ def run_prediction():
         now_amt  = 0.0
         if now_flag:
             _pred = stage2.predict(X_now)
-            now_amt = float(np.clip(np.expm1(_pred.ravel()[0]), 0, None))
+            now_amt = float(np.clip(np.expm1(stage2.predict(X_now)), 0, None).item())
         n_past  = len(df_past)
         X_fut   = X_all[n_past:n_past+len(df_future), :]
         probs   = stage1.predict_proba(X_fut)[:, 1]
