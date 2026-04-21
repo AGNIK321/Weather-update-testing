@@ -427,7 +427,7 @@ def load_models():
 
 @st.cache_data(ttl=600)
 def fetch_owm_realtime(_key):
-    url = "https://api.open-meteo.com/v1/forecast"
+    url = "https://api.openweathermap.org/data/2.5/weather"
     r = requests.get(url, params={"lat":22.5726,"lon":88.3639,"appid":_key,"units":"metric"}, timeout=10)
     r.raise_for_status()
     d = r.json()
