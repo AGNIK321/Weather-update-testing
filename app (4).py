@@ -449,7 +449,7 @@ def fetch_open_meteo_history():
         "hourly": "temperature_2m,relative_humidity_2m,surface_pressure,precipitation",
         "past_days":8, "forecast_days":2, "timezone":"Asia/Kolkata",
     }
-   try:
+    try:
         r = requests.get(url, params=params, timeout=10)
         r.raise_for_status()
         d = r.json()['hourly']
