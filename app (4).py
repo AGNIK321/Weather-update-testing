@@ -442,8 +442,8 @@ def fetch_owm_realtime(_key):
 
 @st.cache_data(ttl=600)
 def fetch_open_meteo_history():
-    #url = "https://api.openweathermap.org/data/2.5/weather"
-    url="https://api.open-meteo.com/v1/forecast"
+    url = "https://api.openweathermap.org/data/2.5/weather"
+    #url="https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude":22.5726, "longitude":88.3639,
         "hourly": "temperature_2m,relative_humidity_2m,surface_pressure,precipitation",
