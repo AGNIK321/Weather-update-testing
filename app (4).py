@@ -448,16 +448,24 @@ def fetch_open_meteo_history():
         "hourly": "temperature_2m,relative_humidity_2m,surface_pressure,precipitation",
         "past_days":8, "forecast_days":2, "timezone":"Asia/Kolkata",
     }
-    r = requests.get(url, params=params, timeout=10)
-    r.raise_for_status()
-    d = r.json()['hourly']
-    return pd.DataFrame({
-        'time':      pd.to_datetime(d['time']),
-        'Temp_C':    d['temperature_2m'],
-        'RH_pct':    d['relative_humidity_2m'],
-        'Press_hPa': d['surface_pressure'],
-        'Rain_mm':   d['precipitation'],
-    })
+    try:
+        r = requests.get(url, params=params, timeout=10)
+        r.raise_for_status()
+        d = r.json()['hourly']
+        return pd.DataFrame({
+            'time':      pd.to_datetime(d['time']),
+            'Temp_C':    d['temperature_2m'],
+            'RH_pct':    d['relative_humidity_2m'],
+            'Press_hPa': d['surface_pressure'],
+            'Rain_mm':   d['precipitation'],
+        })
+    except requests.exceptions.HTTPError as e:
+        # If it's a 429, log it and return an empty DF or previous data
+        if e.response.status_code == 429:
+            st.warning("API limit reached. Using cached/previous data.")
+            return pd.DataFrame() # Or handle returning old data here
+        else:
+            raise e
 
 @st.cache_data(ttl=600)
 def fetch_comparison():
